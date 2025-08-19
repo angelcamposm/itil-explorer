@@ -1,6 +1,6 @@
 # ITIL® 4 Explorer
 
-![Banner del Explorador ITIL](https://placehold.co/1200x400/007ea7/ffffff?text=ITIL+4+Explorer)
+![Banner del Explorador ITIL](https://placehold.co/1200x400/007ea7/ffffff?text=ITIL®+4+Explorer)
 
 ## Descripción
 
