@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Interactivo de ITIL 4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Professional Sky -->
+    <!-- Application Structure Plan: Se ha diseñado una SPA con una estructura temática no lineal para facilitar la exploración autodirigida. La navegación superior fija permite un acceso rápido a las secciones clave. La aplicación comienza con una comparación visual (ITIL v3 vs. v4) para contextualizar la evolución. El núcleo es un diagrama interactivo del Sistema de Valor del Servicio (SVS) que permite al usuario profundizar en cada componente. Se ha añadido una sección dedicada a los Principios Rectores. Las prácticas se presentan con filtros para una gestión sencilla de la información, y el impacto empresarial se muestra con elementos visuales para reforzar los beneficios. Esta estructura prioriza la interactividad y el descubrimiento sobre la lectura pasiva del informe original, haciendo que el aprendizaje sea más eficiente y atractivo. -->
+    <!-- Visualization & Content Choices: 1. Comparación v3/v4 -> Meta: Comparar -> Viz: Gráfico de radar (Chart.js) -> Interacción: Tooltips -> Justificación: Visualiza la expansión del paradigma de forma más efectiva que un gráfico de barras. 2. Diagrama SVS/SVC -> Meta: Organizar/Informar -> Viz: Diagrama interactivo HTML/CSS -> Interacción: Clic para mostrar detalles -> Justificación: Transforma un diagrama estático en una herramienta de exploración. 3. 34 Prácticas -> Meta: Organizar/Explorar -> Viz: Tarjetas con filtros JS -> Interacción: Clic en botones para filtrar -> Justificación: Permite al usuario navegar por un gran volumen de información sin sentirse abrumado. 4. 4 Dimensiones -> Meta: Informar -> Viz: Layout de cuadrícula CSS -> Interacción: Hover para resaltar -> Justificación: Presenta los componentes interconectados de forma equilibrada. 5. 7 Principios Rectores -> Meta: Informar -> Viz: Cuadrícula de tarjetas -> Interacción: Hover para resaltar -> Justificación: Presentación clara y concisa de los principios clave. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: all 0.3s ease-in-out;
+            border-bottom: 2px solid transparent;
+            padding-bottom: 4px;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0284c7; /* sky-600 */
+            border-bottom-color: #0284c7; /* sky-600 */
+        }
+        .card {
+            transition: all 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .modal-backdrop {
+            transition: opacity 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 450px;
+            max-height: 60vh;
+        }
+        section {
+            padding-top: 4rem;
+            padding-bottom: 4rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/90 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-sky-600">ITIL® 4 Interactivo</h1>
+            <div class="hidden md:flex space-x-10">
+                <a href="#intro" class="nav-link text-lg font-medium text-slate-600">Inicio</a>
+                <a href="#svs" class="nav-link text-lg font-medium text-slate-600">Sistema de Valor</a>
+                <a href="#dimensions" class="nav-link text-lg font-medium text-slate-600">4 Dimensiones</a>
+                <a href="#principles" class="nav-link text-lg font-medium text-slate-600">Principios</a>
+                <a href="#practices" class="nav-link text-lg font-medium text-slate-600">Prácticas</a>
+                <a href="#impact" class="nav-link text-lg font-medium text-slate-600">Impacto</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-3xl text-slate-600">☰</button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4 border-t border-slate-200">
+            <a href="#intro" class="block py-2 nav-link text-slate-600">Inicio</a>
+            <a href="#svs" class="block py-2 nav-link text-slate-600">Sistema de Valor</a>
+            <a href="#dimensions" class="block py-2 nav-link text-slate-600">4 Dimensiones</a>
+            <a href="#principles" class="block py-2 nav-link text-slate-600">Principios</a>
+            <a href="#practices" class="block py-2 nav-link text-slate-600">Prácticas</a>
+            <a href="#impact" class="block py-2 nav-link text-slate-600">Impacto</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6">
+
+        <section id="intro" class="text-center">
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-slate-800">La Guía Definitiva de ITIL 4</h2>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto mb-12 leading-relaxed">Un marco moderno para la co-creación de valor en la era digital. ITIL 4 ha evolucionado para ser más flexible, ágil y colaborativo, integrándose con metodologías como Agile y DevOps para alinear la tecnología con los objetivos estratégicos del negocio.</p>
+            <div class="chart-container">
+                <canvas id="itilComparisonChart"></canvas>
+            </div>
+            <p class="text-sm text-slate-500 mt-6">Este gráfico de radar ilustra la expansión del enfoque de ITIL 4 (azul) en comparación con el de ITIL v3 (gris). Un área mayor indica un enfoque más holístico e integrado en cada dimensión clave.</p>
+        </section>
+
+        <section id="svs">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 text-slate-800">El Sistema de Valor del Servicio (SVS)</h2>
+            <p class="text-lg text-slate-600 max-w-4xl mx-auto text-center mb-16 leading-relaxed">El SVS es el corazón de ITIL 4. Describe cómo todos los componentes y actividades de una organización trabajan juntos como un sistema para transformar la demanda en valor real. Haga clic en cada componente del diagrama para explorar cómo contribuye a este sistema integrado.</p>
+            <div class="flex flex-col lg:flex-row gap-12 items-start">
+                <div class="w-full lg:w-2/3">
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-center items-center">
+                            <div class="md:col-span-1 flex justify-center items-center p-4">
+                                <div class="font-bold text-lg text-slate-500 transform -rotate-90 md:rotate-0">Oportunidad / Demanda</div>
+                            </div>
+                            <div class="md:col-span-3 border-2 border-dashed border-sky-300 p-4 rounded-lg">
+                                <div id="svs-governance" class="svs-component bg-slate-100 p-3 rounded-lg mb-2 cursor-pointer hover:bg-slate-200 transition-colors">Gobernanza</div>
+                                <div class="grid grid-cols-3 gap-2 items-center mb-2">
+                                    <div id="svs-principles" class="svs-component bg-sky-100 p-3 rounded-lg cursor-pointer hover:bg-sky-200 transition-colors h-full flex items-center justify-center">Principios Rectores</div>
+                                    <div id="svs-svc" class="svs-component bg-white border-2 border-sky-500 p-3 rounded-lg cursor-pointer hover:bg-sky-50 transition-colors font-semibold text-sky-600">Cadena de Valor del Servicio</div>
+                                    <div id="svs-practices" class="svs-component bg-sky-100 p-3 rounded-lg cursor-pointer hover:bg-sky-200 transition-colors h-full flex items-center justify-center">Prácticas</div>
+                                </div>
+                                <div id="svs-improvement" class="svs-component bg-slate-100 p-3 rounded-lg cursor-pointer hover:bg-slate-200 transition-colors">Mejora Continua</div>
+                            </div>
+                            <div class="md:col-span-1 flex justify-center items-center p-4">
+                                <div class="font-bold text-lg text-slate-500">Valor</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="svs-details" class="w-full lg:w-1/3 bg-white p-8 rounded-xl shadow-lg border border-slate-200 min-h-[300px]">
+                    <h3 id="svs-details-title" class="text-2xl font-bold text-sky-600 mb-4">Seleccione un componente</h3>
+                    <p id="svs-details-content" class="text-slate-600 leading-relaxed">Haga clic en un elemento del diagrama del SVS para ver su descripción detallada aquí. Este panel le ayudará a comprender el rol de cada parte en la creación de valor.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="dimensions">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 text-slate-800">Las Cuatro Dimensiones</h2>
+            <p class="text-lg text-slate-600 max-w-4xl mx-auto text-center mb-16 leading-relaxed">Para entregar valor de manera holística, ITIL 4 enfatiza un enfoque equilibrado en cuatro dimensiones críticas. Ignorar cualquiera de ellas puede llevar al fracaso.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-2xl font-bold mb-3 text-sky-600">1. Organizaciones y Personas</h3>
+                    <p class="leading-relaxed">Cubre la cultura, estructura, roles y competencias. Reconoce que las personas son el activo más importante y una cultura colaborativa es fundamental para el éxito.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-2xl font-bold mb-3 text-sky-600">2. Información y Tecnología</h3>
+                    <p class="leading-relaxed">Se refiere a la información, el conocimiento y las tecnologías necesarias para la gestión de servicios, desde hardware y software hasta bases de conocimiento y herramientas de automatización.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-2xl font-bold mb-3 text-slate-500">3. Socios y Proveedores</h3>
+                    <p class="leading-relaxed">Abarca las relaciones con otras organizaciones que participan en el ciclo de vida del servicio. Es crucial alinear a los socios con la cultura y los objetivos de la organización.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-2xl font-bold mb-3 text-slate-500">4. Flujos de Valor y Procesos</h3>
+                    <p class="leading-relaxed">Se enfoca en cómo las partes de la organización trabajan de manera integrada para co-crear valor, definiendo actividades, flujos de trabajo y controles para alcanzar los objetivos.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="principles">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 text-slate-800">Los 7 Principios Rectores</h2>
+            <p class="text-lg text-slate-600 max-w-4xl mx-auto text-center mb-16 leading-relaxed">Estos son el ADN cultural de ITIL 4. Son recomendaciones universales que guían a la organización en todas las circunstancias, fomentando una cultura de gestión de servicios centrada en el valor y la mejora continua.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold mb-3 text-sky-600">1. Enfocarse en el valor</h3>
+                    <p class="leading-relaxed">Toda actividad realizada debe estar vinculada, directa o indirectamente, al valor para las partes interesadas.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold mb-3 text-sky-600">2. Empezar donde estás</h3>
+                    <p class="leading-relaxed">No empiece de cero. Evalúe el estado actual y aproveche lo que ya existe como punto de partida.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold mb-3 text-sky-600">3. Progresar iterativamente</h3>
+                    <p class="leading-relaxed">Organice el trabajo en iteraciones pequeñas y manejables que permitan obtener retroalimentación continua.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold mb-3 text-slate-500">4. Colaborar y promover la visibilidad</h3>
+                    <p class="leading-relaxed">Trabajar juntos de forma transparente a través de las fronteras departamentales conduce a mejores resultados.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold mb-3 text-slate-500">5. Pensar y trabajar de forma holística</h3>
+                    <p class="leading-relaxed">Ningún servicio o componente opera de forma aislada. Vea el sistema completo para entregar valor.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-xl font-bold mb-3 text-slate-500">6. Mantenerlo simple y práctico</h3>
+                    <p class="leading-relaxed">Utilice el número mínimo de pasos necesarios. Elimine lo que no produzca un valor tangible.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200 lg:col-start-2">
+                    <h3 class="text-xl font-bold mb-3 text-sky-600">7. Optimizar y automatizar</h3>
+                    <p class="leading-relaxed">Use los recursos de la manera más eficaz posible. Automatice tareas repetitivas para liberar a los humanos.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="practices">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-6 text-slate-800">Las 34 Prácticas de ITIL</h2>
+            <p class="text-lg text-slate-600 max-w-4xl mx-auto text-center mb-12 leading-relaxed">ITIL 4 reemplaza los "procesos" por "prácticas", que son conjuntos de recursos organizacionales para lograr un objetivo. Utilice los filtros para explorar las prácticas y haga clic en cualquiera de ellas para obtener una descripción detallada.</p>
+            <div class="flex flex-wrap justify-center gap-4 mb-12">
+                <button class="practice-filter-btn active px-6 py-2 bg-sky-600 text-white font-semibold rounded-full shadow-md transition-all duration-300" data-filter="all">Todas (34)</button>
+                <button class="practice-filter-btn px-6 py-2 bg-white text-sky-600 font-semibold rounded-full shadow-md hover:bg-sky-50 transition-all duration-300" data-filter="general">Gestión General (14)</button>
+                <button class="practice-filter-btn px-6 py-2 bg-white text-sky-600 font-semibold rounded-full shadow-md hover:bg-sky-50 transition-all duration-300" data-filter="service">Gestión de Servicios (17)</button>
+                <button class="practice-filter-btn px-6 py-2 bg-white text-sky-600 font-semibold rounded-full shadow-md hover:bg-sky-50 transition-all duration-300" data-filter="technical">Gestión Técnica (3)</button>
+            </div>
+            <div id="practices-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            </div>
+        </section>
+
+        <section id="impact" class="text-center">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6 text-slate-800">Impacto Empresarial y ESM</h2>
+            <p class="text-lg text-slate-600 max-w-4xl mx-auto text-center mb-16 leading-relaxed">La adopción de ITIL 4 va más allá de TI, catalizando la eficiencia y el valor en toda la empresa. Esto se conoce como Gestión de Servicios Empresariales (ESM), aplicando los principios de ITIL a departamentos como RRHH, Finanzas y más.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <div class="text-6xl mb-4">🤝</div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-800">Alineación Estratégica</h3>
+                    <p class="leading-relaxed">Asegura que las actividades de TI y otros departamentos estén directamente alineadas con los objetivos del negocio.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <div class="text-6xl mb-4">📈</div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-800">Mejora de la Calidad</h3>
+                    <p class="leading-relaxed">Establece expectativas claras y procesos eficientes, mejorando la calidad del servicio y la satisfacción del cliente.</p>
+                </div>
+                <div class="card bg-white p-8 rounded-xl shadow-md border border-slate-200">
+                    <div class="text-6xl mb-4">⚙️</div>
+                    <h3 class="text-xl font-bold mb-3 text-slate-800">Optimización y Eficiencia</h3>
+                    <p class="leading-relaxed">Estandariza y automatiza procesos para optimizar el uso de recursos y reducir costos operativos.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <div id="practice-modal" class="modal-backdrop fixed inset-0 bg-black/60 flex items-center justify-center p-4 hidden opacity-0">
+        <div class="modal-content bg-white rounded-lg shadow-2xl w-full max-w-2xl p-8 transform scale-95">
+            <div class="flex justify-between items-start">
+                <h3 id="modal-title" class="text-3xl font-bold text-sky-600 mb-4"></h3>
+                <button id="modal-close-btn" class="text-4xl text-slate-400 hover:text-slate-600 transition-colors">&times;</button>
+            </div>
+            <p id="modal-category" class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4"></p>
+            <p id="modal-description" class="text-slate-600 leading-relaxed"></p>
+        </div>
+    </div>
+
+    <footer class="text-center py-10 mt-16 border-t border-slate-200">
+        <p class="text-slate-500">Panel Interactivo de ITIL® 4. Creado para facilitar el aprendizaje y la exploración.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            const itilComparisonData = {
+                labels: ['Filosofía', 'Estructura', 'Enfoque', 'Integración', 'Mejora'],
+                datasets: [
+                    {
+                        label: 'ITIL v3',
+                        data: [3, 4, 3, 2, 2],
+                        backgroundColor: 'rgba(148, 163, 184, 0.4)', // slate-400
+                        borderColor: 'rgba(148, 163, 184, 1)',
+                        pointBackgroundColor: 'rgba(148, 163, 184, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'ITIL 4',
+                        data: [5, 5, 5, 5, 5],
+                        backgroundColor: 'rgba(2, 132, 199, 0.4)', // sky-600
+                        borderColor: 'rgba(2, 132, 199, 1)',
+                        pointBackgroundColor: 'rgba(2, 132, 199, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            };
+
+            const itilComparisonConfig = {
+                type: 'radar',
+                data: itilComparisonData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Evolución del Paradigma: ITIL v3 vs. ITIL 4',
+                            font: { size: 18, weight: 'bold' },
+                            color: '#1e293b', // slate-800
+                            padding: {
+                                top: 10,
+                                bottom: 20
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                color: '#334155' // slate-700
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const category = context.label;
+                                    let details = '';
+                                    const mapping = {
+                                        'Filosofía': ['Ciclo de vida de servicio', 'Co-creación de valor'],
+                                        'Estructura': ['5 Fases del Ciclo de Vida', 'Sistema de Valor (SVS)'],
+                                        'Enfoque': ['Basado en procesos', 'Basado en principios'],
+                                        'Integración': ['Aislado (Silos)', 'Integra Agile/DevOps'],
+                                        'Mejora': ['Fase final', 'Integral y continua']
+                                    };
+                                    details = label === 'ITIL v3' ? mapping[category][0] : mapping[category][1];
+                                    return `${label}: ${details}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                display: true
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 5,
+                            pointLabels: {
+                                font: {
+                                    size: 14
+                                },
+                                color: '#334155' // slate-700
+                            },
+                            ticks: {
+                                stepSize: 1,
+                                display: false
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.08)'
+                            }
+                        }
+                    }
+                }
+            };
+
+            new Chart(
+                document.getElementById('itilComparisonChart'),
+                itilComparisonConfig
+            );
+
+            const svsComponents = {
+                'svs-governance': {
+                    title: 'Gobernanza',
+                    content: 'Es el sistema por el cual una organización es dirigida y controlada. Establece la dirección estratégica y monitorea el rendimiento para asegurar que las operaciones de TI estén alineadas con los objetivos del negocio.'
+                },
+                'svs-svc': {
+                    title: 'Cadena de Valor del Servicio',
+                    content: 'Un modelo operativo flexible con seis actividades clave (Planificar, Mejorar, Involucrar, Diseño y Transición, Obtener/Construir, Entrega y Soporte) que se combinan para crear flujos de valor y entregar productos y servicios.'
+                },
+                'svs-principles': {
+                    title: 'Principios Rectores',
+                    content: 'Son el ADN cultural de ITIL 4. Siete recomendaciones universales como "Enfocarse en el valor" y "Progresar iterativamente" que guían a la organización en todas las circunstancias.'
+                },
+                'svs-practices': {
+                    title: 'Prácticas',
+                    content: 'Conjuntos de recursos organizacionales (personas, procesos, tecnología) diseñados para realizar un trabajo o lograr un objetivo. ITIL 4 define 34 prácticas en total.'
+                },
+                'svs-improvement': {
+                    title: 'Mejora Continua',
+                    content: 'Un componente fundamental y omnipresente en el SVS. Es una responsabilidad de todos en la organización para mejorar continuamente productos, servicios y prácticas.'
+                }
+            };
+
+            const svsDetailsTitle = document.getElementById('svs-details-title');
+            const svsDetailsContent = document.getElementById('svs-details-content');
+            const svsElements = document.querySelectorAll('.svs-component');
+            
+            svsElements.forEach(el => {
+                el.addEventListener('click', () => {
+                    svsElements.forEach(e => e.classList.remove('ring-2', 'ring-offset-2', 'ring-sky-500'));
+                    el.classList.add('ring-2', 'ring-offset-2', 'ring-sky-500');
+                    const data = svsComponents[el.id];
+                    svsDetailsTitle.textContent = data.title;
+                    svsDetailsContent.textContent = data.content;
+                });
+            });
+
+            const practicesData = [
+                { name: "Gestión de la Arquitectura", category: "general", description: "Proporciona una comprensión de cómo los diferentes componentes de la organización se interrelacionan para alcanzar los objetivos de negocio." },
+                { name: "Mejora Continua", category: "general", description: "Alinea las prácticas y servicios de la organización con las necesidades cambiantes del negocio a través de la identificación e implementación de mejoras." },
+                { name: "Gestión de la Seguridad de la Información", category: "general", description: "Protege la información de la organización asegurando la confidencialidad, integridad y disponibilidad." },
+                { name: "Gestión del Conocimiento", category: "general", description: "Mantiene y mejora el uso efectivo, eficiente y conveniente de la información y el conocimiento en toda la organización." },
+                { name: "Medición e Informes", category: "general", description: "Apoya la toma de decisiones y la mejora continua al recopilar, analizar y presentar datos de rendimiento." },
+                { name: "Gestión del Cambio Organizacional", category: "general", description: "Gestiona el aspecto humano de los cambios para asegurar que las mejoras y transformaciones organizacionales se implementen con éxito." },
+                { name: "Gestión de Portafolios", category: "general", description: "Asegura que la organización tenga la combinación correcta de programas, proyectos, productos y servicios para ejecutar su estrategia." },
+                { name: "Gestión de Proyectos", category: "general", description: "Planifica, delega, monitorea y controla todos los aspectos de un proyecto para lograr los objetivos dentro de las restricciones acordadas." },
+                { name: "Gestión de Relaciones", category: "general", description: "Establece y fomenta los vínculos entre la organización y sus partes interesadas a niveles estratégicos y tácticos." },
+                { name: "Gestión de Riesgos", category: "general", description: "Asegura que la organización comprenda y maneje eficazmente los riesgos." },
+                { name: "Gestión Financiera de Servicios", category: "general", description: "Apoya la estrategia y los planes de la organización para la gestión de servicios asegurando que los recursos financieros se gestionen eficazmente." },
+                { name: "Gestión de la Estrategia", category: "general", description: "Formula los objetivos de la organización y adopta los cursos de acción y la asignación de recursos necesarios para alcanzar esos objetivos." },
+                { name: "Gestión de Proveedores", category: "general", description: "Asegura que los proveedores de la organización y sus desempeños se gestionen adecuadamente para respaldar la provisión de servicios de calidad." },
+                { name: "Gestión de la Fuerza Laboral y el Talento", category: "general", description: "Asegura que la organización tenga las personas adecuadas con las habilidades y conocimientos correctos en los roles correctos." },
+                { name: "Gestión de la Disponibilidad", category: "service", description: "Asegura que los servicios ofrezcan los niveles de disponibilidad acordados para satisfacer las necesidades de los clientes y usuarios." },
+                { name: "Análisis de Negocio", category: "service", description: "Analiza un negocio o elemento del mismo, define las necesidades asociadas y recomienda soluciones para abordar estas necesidades." },
+                { name: "Gestión de la Capacidad y el Rendimiento", category: "service", description: "Asegura que los servicios alcancen los niveles de rendimiento acordados y esperados, satisfaciendo la demanda actual y futura de manera rentable." },
+                { name: "Habilitación del Cambio", category: "service", description: "Maximiza el número de cambios exitosos evaluando riesgos, autorizando cambios y gestionando el calendario de cambios. Anteriormente conocido como Control de Cambios." },
+                { name: "Gestión de Incidentes", category: "service", description: "Minimiza el impacto negativo de las interrupciones restaurando la operación normal del servicio lo más rápido posible. Es un proceso reactivo." },
+                { name: "Gestión de Activos de TI", category: "service", description: "Planifica y gestiona el ciclo de vida completo de todos los activos de TI para ayudar a la organización a maximizar el valor, controlar los costos y gestionar los riesgos." },
+                { name: "Monitoreo y Gestión de Eventos", category: "service", description: "Observa sistemáticamente los servicios y componentes de servicio, y registra e informa sobre los cambios de estado seleccionados identificados como eventos." },
+                { name: "Gestión de Problemas", category: "service", description: "Reduce la probabilidad y el impacto de incidentes futuros identificando y resolviendo las causas raíz. Es un proceso proactivo." },
+                { name: "Gestión de Liberaciones", category: "service", description: "Hace que los servicios y características nuevos y modificados estén disponibles para su uso." },
+                { name: "Gestión del Catálogo de Servicios", category: "service", description: "Proporciona una única fuente de información consistente sobre todos los servicios y ofertas de servicios, y asegura que sea accesible para la audiencia relevante." },
+                { name: "Gestión de la Configuración de Servicios", category: "service", description: "Asegura que la información precisa y fiable sobre la configuración de los servicios y los elementos de configuración que los soportan esté disponible cuando y donde se necesite." },
+                { name: "Gestión de la Continuidad del Servicio", category: "service", description: "Asegura que la organización pueda continuar operando a un nivel mínimo predefinido después de un desastre, al garantizar la recuperación de los servicios de TI." },
+                { name: "Diseño de Servicios", category: "service", description: "Diseña productos y servicios que sean adecuados para su propósito, adecuados para su uso y que puedan ser entregados por la organización y su ecosistema." },
+                { name: "Mesa de Servicio", category: "service", description: "Es el punto único de contacto (SPOC) entre el proveedor de servicios y los usuarios. Captura la demanda de resolución de incidentes y solicitudes de servicio." },
+                { name: "Gestión del Nivel de Servicio (SLM)", category: "service", description: "Establece objetivos claros y medibles para los niveles de servicio a través de Acuerdos de Nivel de Servicio (SLAs) y asegura su cumplimiento." },
+                { name: "Gestión de Solicitudes de Servicio", category: "service", description: "Maneja todas las solicitudes predefinidas iniciadas por el usuario (ej. solicitud de información, acceso a un recurso) de manera eficaz." },
+                { name: "Validación y Pruebas del Servicio", category: "service", description: "Asegura que los productos y servicios nuevos o modificados cumplan con los requisitos definidos." },
+                { name: "Gestión de la Implementación", category: "technical", description: "Mueve hardware, software, documentación, procesos o cualquier otro componente nuevo o modificado a entornos activos." },
+                { name: "Gestión de Infraestructura y Plataformas", category: "technical", description: "Supervisa la infraestructura y las plataformas utilizadas por la organización, permitiendo el despliegue, la gestión y el soporte de productos y servicios." },
+                { name: "Desarrollo y Gestión de Software", category: "technical", description: "Asegura que las aplicaciones cumplan con las necesidades de las partes interesadas en términos de funcionalidad, fiabilidad, mantenibilidad, cumplimiento y auditabilidad." },
+            ];
+
+            const practicesGrid = document.getElementById('practices-grid');
+            const filterBtns = document.querySelectorAll('.practice-filter-btn');
+            const modal = document.getElementById('practice-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalCategory = document.getElementById('modal-category');
+            const modalDescription = document.getElementById('modal-description');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            const renderPractices = (filter = 'all') => {
+                practicesGrid.innerHTML = '';
+                const filteredPractices = filter === 'all' ? practicesData : practicesData.filter(p => p.category === filter);
+                
+                filteredPractices.forEach(practice => {
+                    const card = document.createElement('div');
+                    card.className = 'card bg-white p-4 rounded-lg shadow-sm border border-slate-200 cursor-pointer text-center flex items-center justify-center h-24';
+                    card.innerHTML = `<h4 class="font-semibold text-slate-700">${practice.name}</h4>`;
+                    card.addEventListener('click', () => showModal(practice));
+                    practicesGrid.appendChild(card);
+                });
+            };
+
+            const showModal = (practice) => {
+                modalTitle.textContent = practice.name;
+                modalCategory.textContent = `Práctica de ${practice.category.replace('general', 'Gestión General').replace('service', 'Gestión de Servicios').replace('technical', 'Gestión Técnica')}`;
+                modalDescription.textContent = practice.description || 'No se encontró una descripción para esta práctica.';
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.querySelector('.modal-content').classList.remove('scale-95');
+                }, 10);
+            };
+
+            const hideModal = () => {
+                modal.classList.add('opacity-0');
+                modal.querySelector('.modal-content').classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            };
+
+            modalCloseBtn.addEventListener('click', hideModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => {
+                        b.classList.remove('active', 'bg-sky-600', 'text-white');
+                        b.classList.add('bg-white', 'text-sky-600');
+                    });
+                    btn.classList.add('active', 'bg-sky-600', 'text-white');
+                    btn.classList.remove('bg-white', 'text-sky-600');
+                    renderPractices(btn.dataset.filter);
+                });
+            });
+
+            renderPractices();
+        });
+    </script>
+</body>
+</html>
